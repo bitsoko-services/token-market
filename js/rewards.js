@@ -7,7 +7,6 @@ var baseCd;
 var deliveryGuys;
 
 function openOrder(oid, act) {
-    $('#tradeOrder').modal('open');
     $("#newTradeTotal").val('')
     $("#newTransferTotal").val('');
     $("#newTransferAmount").val('');
@@ -16,8 +15,9 @@ function openOrder(oid, act) {
     // Callback for Modal open. Modal and trigger parameters available.
     tradeManager(oid, act);
 
-    $("#newTradePrice").val(allTokens[activeCoin.toLowerCase()].rate * baseX);
-    setOrderCallbacks();
+}
+function walletStatus() {
+    if (sessionStorage.getItem('walletKey') ){return true;}else{ loadGdrive()}
 }
 
 function upDtokenD() {
@@ -27,8 +27,9 @@ function upDtokenD() {
     $('.coindata-' + activeCoin.toLowerCase() + '-wpage').html(allTokens[activeCoin.toLowerCase()].webpage.toLowerCase());
     $('.coindata-' + activeCoin.toLowerCase() + '-mcap').html(numberify(((allTokens[activeCoin.toLowerCase()].rate * baseX) * allTokens[activeCoin.toLowerCase()].supply)) + ' ' + baseCd.toUpperCase());
     $('.coindata-' + activeCoin.toLowerCase() + '-price').html(numberify(allTokens[activeCoin.toLowerCase()].rate * baseX) + ' ' + baseCd.toUpperCase());
-    console.log(allTokens[activeCoin.toLowerCase()].balance, Math.pow(10, allTokens[activeCoin.toLowerCase()].decimals), allTokens[activeCoin.toLowerCase()].rate, baseX, baseCd.toUpperCase());
+    //console.log(allTokens[activeCoin.toLowerCase()].balance, Math.pow(10, allTokens[activeCoin.toLowerCase()].decimals), allTokens[activeCoin.toLowerCase()].rate, baseX, baseCd.toUpperCase());
     var thBal = numberify((allTokens[activeCoin.toLowerCase()].balance / Math.pow(10, allTokens[activeCoin.toLowerCase()].decimals) * allTokens[activeCoin.toLowerCase()].rate * baseX), 2);
+    $('.tokens-' + activeCoin.toLowerCase() + '-Balance').html('').append(allTokens[activeCoin.toLowerCase()].balance / Math.pow(10, allTokens[activeCoin.toLowerCase()].decimals) + ' ' +  allTokens[activeCoin.toLowerCase()].name);
     $('.wallet-' + activeCoin.toLowerCase() + '-Balance').html('').append(thBal + ' ' + baseCd.toUpperCase());
     if (parseFloat(thBal) > 0) {
         $(".new-trade-buy-Button").attr("disabled", false);
@@ -96,7 +97,12 @@ function sortOrderBookColor() {
     $($("#orderbookSep").nextAll("tr.element-" + activeCoin.toLowerCase() + "-coin")[0]).css({
         "background-color": "rgb(153, 255, 153)"
     });
+// center the orderbook
+                $('.orderbook').animate({
+                    scrollTop: 40
+                }, 1000);
 
+                    
 }
 
 function doNewTransfer() {
@@ -211,8 +217,10 @@ function stopOrderWatch() {
 function setOrderCallbacks() {
 
     $(".tradeOrderFooterComplete").click(function () {
-        $(this).html('<div class="preloader-wrapper active" style="width:30px;height:30px;"><div class="spinner-layer spinner-green-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div> </div></div>');
-        console.log($(this).attr("oid"), $(this).attr("action"));
+        $(this).html('<div class="preloader-wrapper active" style="padding :10px;width:25px;height:25px;"><div class="spinner-layer spinner-white-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div> </div></div>');
+        
+                var actionid=$(this).attr("oid");
+                var actionadr=$(this).attr("oadr");
         if ($(this).attr("action") == 'transfer') {
             //buy from orderbook
             console.log('transferring from wallet');
@@ -229,7 +237,7 @@ function setOrderCallbacks() {
                 console.log(e);
                 M.toast({
                     displayLength: 5000,
-                    html: '<span >error adding order. does your wallet have enough gas?</span>'
+                    html: '<span >Error! completing previous transaction..</span>'
                 });
 
             });
@@ -237,29 +245,59 @@ function setOrderCallbacks() {
         } else if ($(this).attr("oid") == 'new') {
 
             if ($(this).attr("action") == 'buy') {
+                
+                // TO-DO 
+                // enable payment using mobile money and cards, currently only eth payments are processed
+                
+                
+var sendInFiat = $("#newTradePrice").val() * $("#newTradeAmount").val();
+                
+                transferTokenValue('0x7D1Ce470c95DbF3DF8a3E87DCEC63c98E567d481', 'eth', parseFloat(sendInFiat), 1).then(function (r) {
+
 
                 doFetch({
                     action: 'manageTradeOrder',
                     oid: 'new',
-                    do: $(this).attr("action"),
+                    do: 'buy',
                     user: localStorage.getItem('bits-user-name'),
                     amount: $("#newTradeAmount").val(),
                     coin: activeCoin,
                     rate: $("#newTradePrice").val(),
-                    fiat: baseCd
+                    fiat: baseCd,
+                    txHash: r
                 }).then(function (e) {
                     if (e.status == 'ok') {
                         $('#tradeOrder').modal('close');
                         orderBookManager(baseX, baseCd);
                         M.toast({
                             displayLength: 5000,
-                            html: '<span >ok! waiting for seller..</span>'
-                        });
+                            html: '<span >Order Added! waiting for seller..</span><button class="btn-flat toast-action" ><a href="https://etherscan.io/tx/' + r + '" target="_blank" style="margin:0px;" class="btn-flat green-text">verify<a></button>'
+                                });
 
                     }
                 });
 
+                
 
+
+                }).catch(function (e) {
+                    console.log(e);
+                    try {
+
+                        var toastElement = document.querySelector('#toast-container > .tran-error-toast');
+                        var toastInstance = M.Toast.getInstance(toastElement);
+                        toastInstance.dismiss();
+                    } catch (err) {
+                        console.log('!INFO: ', err);
+
+                        M.toast({
+                            displayLength: 5000,
+                            classes: 'tran-error-toast',
+                            html: '<span >error adding order. does your wallet have sufficient balance?</span>'
+                        });
+                    }
+
+                })
             } else {
 
                 try {
@@ -287,7 +325,7 @@ function setOrderCallbacks() {
                     doFetch({
                         action: 'manageTradeOrder',
                         oid: 'new',
-                        do: $(this).attr("action"),
+                        do: 'sell',
                         user: localStorage.getItem('bits-user-name'),
                         amount: $("#newTradeAmount").val(),
                         coin: activeCoin,
@@ -308,7 +346,7 @@ function setOrderCallbacks() {
                                 M.toast({
                                     displayLength: 5000,
                                     classes: 'tran-suc-toast',
-                                    html: '<span >ok! waiting for buyer..</span><button class="btn-flat toast-action" ><a href="https://etherscan.io/tx/' + r + '" target="_blank" style="margin:0px;" class="btn-flat green-text">verify<a></button>'
+                                    html: '<span >Order Added! waiting for buyer..</span><button class="btn-flat toast-action" ><a href="https://etherscan.io/tx/' + r + '" target="_blank" style="margin:0px;" class="btn-flat green-text">verify<a></button>'
                                 });
                             }
 
@@ -346,11 +384,173 @@ function setOrderCallbacks() {
         } else if ($(this).attr("action") == 'buy') {
             //buy from orderbook
             console.log('buying from orderbook')
+            
+             if((allTokens['eth'].balance / Math.pow(10, allTokens['eth'].decimals)*baseX*baseConv)>parseFloat($("#newTradeTotal").val())){         
+            try {
+
+                    var toastElement = document.querySelector('#toast-container > .tran-waiting-toast');
+                    var toastInstance = M.Toast.getInstance(toastElement);
+                    toastInstance.dismiss();
+                } catch (err) {
+                    console.log('!INFO: ', err);
+
+                    M.toast({
+                        displayLength: 5000,
+                        classes: 'tran-waiting-toast',
+                        html: '<span >adding order, please wait..</span>'
+                    });
+                }
+
+                
+                transferTokenValue(actionadr, 'eth', parseFloat($("#newTradeTotal").val()), 1).then(function (r,e) {
+
+                    console.log(r,e);
+
+                    doFetch({
+                        action: 'manageTradeOrder',
+                        oid:  actionid,
+                        do: 'buy',
+                        user: localStorage.getItem('bits-user-name'),
+                        txHash: r
+                    }).then(function (e) {
+                        if (e.status == 'ok') {
+                            $('#tradeOrder').modal('close');
+                            try {
+
+                                var toastElement = document.querySelector('#toast-container > .tran-suc-toast');
+                                var toastInstance = M.Toast.getInstance(toastElement);
+                                toastInstance.dismiss();
+                            } catch (err) {
+                                console.log('!INFO: ', err);
+
+                                M.toast({
+                                    displayLength: 50000,
+                                    classes: 'tran-suc-toast',
+                                    html: '<span >Sent! Please wait for balance update..</span><button class="btn-flat toast-action" ><a href="https://etherscan.io/tx/' + r + '" target="_blank" style="margin:0px;" class="btn-flat green-text">verify<a></button>'
+                                });
+                            }
+
+                            orderBookManager(baseX, baseCd);
+                        }
+                    });
+
+
+
+                }).catch(function (e) {
+                    console.log(e);
+                    try {
+
+                        var toastElement = document.querySelector('#toast-container > .tran-error-toast');
+                        var toastInstance = M.Toast.getInstance(toastElement);
+                        toastInstance.dismiss();
+                    } catch (err) {
+                        console.log('!INFO: ', err);
+
+                        M.toast({
+                            displayLength: 5000,
+                            classes: 'tran-error-toast',
+                            html: '<span >Error! completing previous transaction..</span>'
+                        });
+                    }
+
+                })
+}else{
+    
+                $('#tradeOrder').modal('close');
+    
+     M.toast({
+                    displayLength: 5000,
+                            classes: 'tran-error-toast',
+                    html: '<span >insufficient funds!</span><button class="btn-flat toast-action" ><a href="/tm/?cid=eth" target="_blank" class="btn-flat green-text">topup<a></button>'
+                });
+    
+}
 
         } else if ($(this).attr("action") == 'sell') {
-            //buy from orderbook
+            //selling from orderbook
+            
             console.log('selling from orderbook')
+   if(allTokens[activeCoin.toLowerCase()].balance / Math.pow(10, allTokens[activeCoin.toLowerCase()].decimals)>parseFloat($("#newTradeAmount").val())){         
+            try {
 
+                    var toastElement = document.querySelector('#toast-container > .tran-waiting-toast');
+                    var toastInstance = M.Toast.getInstance(toastElement);
+                    toastInstance.dismiss();
+                } catch (err) {
+                    console.log('!INFO: ', err);
+
+                    M.toast({
+                        displayLength: 5000,
+                        classes: 'tran-waiting-toast',
+                        html: '<span >adding order, please wait..</span>'
+                    });
+                }
+
+                var sendInFiat = $("#newTradePrice").val() * $("#newTradeAmount").val();
+                var atPr = $("#newTradePrice").val() / baseX;
+
+                transferTokenValue(actionadr, activeCoin, (parseFloat(sendInFiat)), atPr).then(function (r,e) {
+
+                    console.log(r,e);
+
+                    doFetch({
+                        action: 'manageTradeOrder',
+                        oid:  actionid,
+                        do: 'sell',
+                        user: localStorage.getItem('bits-user-name'),
+                        txHash: r
+                    }).then(function (e) {
+                        if (e.status == 'ok') {
+                            $('#tradeOrder').modal('close');
+                            try {
+
+                                var toastElement = document.querySelector('#toast-container > .tran-suc-toast');
+                                var toastInstance = M.Toast.getInstance(toastElement);
+                                toastInstance.dismiss();
+                            } catch (err) {
+                                console.log('!INFO: ', err);
+
+                                M.toast({
+                                    displayLength: 50000,
+                                    classes: 'tran-suc-toast',
+                                    html: '<span >Sent! Please wait for balance update..</span><button class="btn-flat toast-action" ><a href="https://etherscan.io/tx/' + r + '" target="_blank" style="margin:0px;" class="btn-flat green-text">verify<a></button>'
+                                });
+                            }
+
+                            orderBookManager(baseX, baseCd);
+                        }
+                    });
+
+
+
+                }).catch(function (e) {
+                    console.log(e);
+                    try {
+
+                        var toastElement = document.querySelector('#toast-container > .tran-error-toast');
+                        var toastInstance = M.Toast.getInstance(toastElement);
+                        toastInstance.dismiss();
+                    } catch (err) {
+                        console.log('!INFO: ', err);
+
+                        M.toast({
+                            displayLength: 5000,
+                            classes: 'tran-error-toast',
+                            html: '<span >Error! completing previous transaction..</span>'
+                        });
+                    }
+
+                })
+}else{
+    
+                $('#tradeOrder').modal('close');
+ M.toast({
+                            displayLength: 3000,
+                            classes: 'tran-error-toast',
+                            html: '<span >insufficient funds</span>'
+                        });
+    
+}
         } else if ($(this).attr("action") == 'manage') {
             //managing from orderbook
 
@@ -427,17 +627,20 @@ for (i = 0; i < x.length; i++) {
 
 
 function updateNewOrderDet(oid, action) {
+    if($('.tradeOrderFooterComplete').attr("action")=='transfer'){
+    return;
+    }
     if (activeCoin.endsWith("s")) {
         var sss = '';
     } else {
         var sss = 's';
     }
-
-    if (action == 'manage') {
-
-        $(".tradeOrderFooterComplete").html('update');
-
-    }
+    
+    
+    $("#newTradePrice").val(allTokens[activeCoin.toLowerCase()].rate * baseX);
+    
+ //       $(".newTradeForm").css("display", 'block');
+    
 
     if (parseFloat(($("#newTradePrice").val()) * parseFloat($("#newTradeAmount").val())) > 0 && $('.newTradeForm')[0].checkValidity()) {
 
@@ -513,24 +716,15 @@ function updateNewOrderDet(oid, action) {
         // $(".tradeOrderFooter").append('<a href="#!" oid="new" action="sell" class="tradeOrderFooterComplete waves-effect green waves-green btn-flat" disabled>Complete</a>');
     }
 
-    if (oid == 'new') {
-
+  
         $("#newTradeAmount").val(res.toFixed(allTokens[activeCoin].decimals));
 
         $(".transStat").html('placing new order..');
 
-    } else {
-
-        $("#newTradePrice").val(ress);
-
-        $(".transStat").html('updating order..');
-    }
-
-
 
     $(".tradeOrderTitle").html('');
     $(".completeOrderBut").prop("oid", '');
-    setOrderCallbacks();
+  //  setOrderCallbacks();
 
 }
 
@@ -551,8 +745,8 @@ function manageOrderDet(oid) {
 
                 //account for currency conversions
                 allOrds[ix].rate = JSON.stringify(parseFloat(allOrds[ix].rate) * baseConv);
-
-
+                
+                
                 //START enable or diasble cancel button
                 if (parseInt(allOrds[ix].tranFrom.uid) == parseInt(localStorage.getItem('bits-user-name')) || parseInt(allOrds[ix].tranTo.uid) == parseInt(localStorage.getItem('bits-user-name'))) {
 
@@ -614,20 +808,32 @@ function manageOrderDet(oid) {
 
                 if (parseInt(allOrds[ix].tranFrom) == 0) {
 
-                    $(".tradeOrderSubTitle").html('BUYING ' + Math.floor10(parseFloat(allOrds[ix].amount), Math.abs(allTokens[allOrds[ix].coin].decimals) * -1) + ' ' + (allTokens[activeCoin.toLowerCase()].name + sss).toUpperCase());
+                    $(".tradeOrderSubTitle").html('SELLING ' + Math.floor10(parseFloat(allOrds[ix].amount), Math.abs(allTokens[allOrds[ix].coin].decimals) * -1) + ' ' + (allTokens[activeCoin.toLowerCase()].name + sss).toUpperCase());
                     $(".tradeOrderBody").html('Send ' + (parseFloat(allOrds[ix].amount) * parseFloat(allOrds[ix].rate)).toFixed(2) + ' ' +
                         baseCd.toUpperCase() + ' to ' + allOrds[ix].tranTo.name.split(" ") + ' at phone number ' + allOrds[ix].tranTo.phone +
                         ' then enter the transaction code below.');
                     $(".tradeOrderImg").prop("src", allOrds[ix].tranTo.icon);
 
                     $(".transStat").html('waiting for you to complete transaction');
+                    
+                    //trade address
+                var trnadr='0x'+JSON.parse(allOrds[ix].tranTo.address.replace('["',"['").replace('"]',"']")).publicAddress.replace("['",'').replace("']",'');
+                $('.tradeOrderFooterComplete').attr("oadr",trnadr);
+
+
                 } else if (parseInt(allOrds[ix].tranTo) == 0) {
-                    $(".tradeOrderSubTitle").html('SELLING ' + Math.floor10(parseFloat(allOrds[ix].amount), Math.abs(allTokens[allOrds[ix].coin].decimals) * -1) + ' ' + (allTokens[activeCoin.toLowerCase()].name + sss).toUpperCase());
+                    $(".tradeOrderSubTitle").html('BUYING ' + Math.floor10(parseFloat(allOrds[ix].amount), Math.abs(allTokens[allOrds[ix].coin].decimals) * -1) + ' ' + (allTokens[activeCoin.toLowerCase()].name + sss).toUpperCase());
                     $(".tradeOrderBody").html('Recieve ' + (parseFloat(allOrds[ix].amount) * parseFloat(allOrds[ix].rate)).toFixed(2) + ' ' +
                         baseCd.toUpperCase() + ' at phone number ' + allOrds[ix].tranFrom.phone + ' then enter the transaction code below.');
                     $(".tradeOrderImg").prop("src", allOrds[ix].tranFrom.icon);
 
                     $(".transStat").html('confirm payment below');
+                    
+                    //trade address
+                var trnadr='0x'+JSON.parse(allOrds[ix].tranFrom.address.replace('["',"['").replace('"]',"']")).publicAddress.replace("['",'').replace("']",'');
+                $('.tradeOrderFooterComplete').attr("oadr",trnadr);
+
+
                 }
                 //    $(".tradeOrderTitle").html(action.toUpperCase() + ' ' + allOrds[ix].amount + ' ' + (allOrds[ix].coin + sss).toUpperCase())
                 $(".completeOrderBut").prop("oid", allOrds[ix].id);
@@ -648,14 +854,22 @@ function tradeManager(oid, action) {
     $(".newTransferForm").css("display", 'none');
 
     $(".doTradeForm").css("display", 'none');
+    
+    
+        $("#newTradeTotal").attr("disabled", false);
+        $("#newTradePrice").attr("disabled", false);
+        $("#newTradeAmount").attr("disabled", true);
+    
 
     $(".tradeOrderFooter").html('').prepend('<a href="#!" oid="' + oid + '" style="float:left;" class="tradeOrderFooterCancel red waves-effect waves-red btn-flat" action="cancel" disabled>Dispute</a>');
     $(".tradeOrderFooter").append('<a href="#!" action="' + action + '" oid="' + oid + '" class="tradeOrderFooterComplete waves-effect green waves-green btn-flat" disabled>Complete</a>');
-
+    
+    
+    setOrderCallbacks();
 
     if (action == 'transfer') {
 
-        orderTimer = setInterval(function () {}, 15000);
+        //orderTimer = setInterval(function () {}, 15000);
 
         doNewTransfer();
         $(".newTransferForm").css("display", 'block');
@@ -665,34 +879,61 @@ function tradeManager(oid, action) {
     } else if (oid == 'new') {
         //this is a new order
 
-        orderTimer = setInterval(function () {}, 15000);
-        updateNewOrderDet(oid, action);
-        $(".newTradeForm").css("display", 'block');
+        //orderTimer = setInterval(function () {}, 15000);
+        updateNewOrderDet('new', action);
 
         return;
 
     } else if (action == 'manage') {
-        //this is a new order
+        //this is an existing order
 
-        orderTimer = setInterval(function () {}, 15000);
+       // orderTimer = setInterval(function () {}, 15000);
         manageOrderDet(oid);
 
         $(".confTradeForm").css("display", 'block');
         $(".newTradeForm").css("display", 'block');
+        
+        
+        $("#newTradeTotal").attr("disabled", true);
+
+        return;
+
+    } else if (action == 'sell') {
+        //this is an existing order
+
+        //orderTimer = setInterval(function () {}, 15000);
+        manageOrderDet(oid);
+        $(".tradeOrderFooterComplete").attr("disabled", false);
+        
+        $("#newTradeTotal").attr("disabled", true);
+        $("#newTradePrice").attr("disabled", true);
+        $("#newTradeAmount").attr("disabled", true);
+        
+        $(".newTradeForm").css("display", 'block');
+        
+        return;
+
+    } else if (action == 'buy') {
+        //this is an existing order
+
+        //orderTimer = setInterval(function () {}, 15000);
+        manageOrderDet(oid);
+        $(".tradeOrderFooterComplete").attr("disabled", false);
+                $(".newTradeForm").css("display", 'block');
+        //$(".doTradeForm").css("display", 'block');
 
         return;
 
     }
-
+/*
     $(".doTradeForm").css("display", 'block');
 
-    orderTimer = setInterval(function () {
-        orderWatch()
-    }, 15000);
+    //orderTimer = setInterval(function () {
+    //    orderWatch()
+    //}, 15000);
 
     $(".confTradeForm").css("display", 'block');
 
-    setOrderCallbacks();
     var store = getObjectStore('data', 'readwrite').get("market-orders");
     store.onsuccess = function (event) {
 
@@ -764,7 +1005,7 @@ function tradeManager(oid, action) {
 
         }
     }
-
+*/
 }
 
 function myOpenOrders(oDs, deci) {
@@ -805,7 +1046,7 @@ function myOpenOrders(oDs, deci) {
         if (parseInt(oDs[ii].tranTo.uid) == parseInt(localStorage.getItem('bits-user-name'))) {
             console.log("++++++++++++++++" + oDs[ii])
             //--------------------------------- collection BUY code ---------------------------------------------------------
-            $("#myOrders").append('<ul class="collection">' + ' <li class="collection-item avatar">' + '<div class="row"> <div class="col s2"><img style="margin-top:5px;" src="/bitsAssets/images/currencies/' + oDs[ii].coin.replace('-kovan', '') + '.png" class="circle" style="height:75px;width: 75px;"></div><div class="col s8"><div style="font-size: 12px; line-height: 1.4;margin-top: 7px;"> <span class="title">BUY</span>' + '<p  class="hidden-xs">Amount: ' + Math.round10(parseFloat(oDs[ii].amount), (deci / -1)) + '</p>' + '<p  class="hidden-xs">Price:' + parseFloat(oDs[ii].rate).toFixed(5) + '</p>' + '<p>Total: ' + (parseFloat(oDs[ii].amount) * parseFloat(oDs[ii].rate)).toFixed(2) + '' + '</p></div></div><div class="col s2"><a class=" modal-trigger" href="#tradeOrder" style="padding:0 1rem" oid="' + oDs[ii].id + '" act="manage"><i class="material-icons right" style="margin-top: 30px;margin-right: 20px;">' + icon + '</i></a></div></div>' +
+            $("#myOrders").append('<ul class="collection">' + ' <li class="collection-item avatar">' + '<div class="row"> <div class="col s3"><img style="margin-top:5px;" src="/bitsAssets/images/currencies/' + oDs[ii].coin.replace('-kovan', '') + '.png" class="circle" style="height:75px;width: 75px;"></div><div class="col s7"><div style="font-size: 12px; line-height: 1.4;margin-top: 7px;"> <span class="title">BUY</span>' + '<p  class="hidden-xs">Amount: ' + Math.round10(parseFloat(oDs[ii].amount), (deci / -1)) + '</p>' + '<p  class="hidden-xs">Price:' + parseFloat(oDs[ii].rate).toFixed(5) + '</p>' + '<p>Total: ' + (parseFloat(oDs[ii].amount) * parseFloat(oDs[ii].rate)).toFixed(2) + '' + '</p></div></div><div class="col s2"><a class=" modal-trigger" href="#tradeOrder" style="padding:0 1rem" oid="' + oDs[ii].id + '" act="manage"><i class="material-icons right editOrderBtn" style="margin-top: 25px;margin-right: 20px; border: solid 1px; border-radius: 3px; padding: 5px;">' + icon + '</i></a></div></div>' +
                 //'<a href="#!" class="secondary-content"><i class="material-icons"></i></a>'+
                 ' </li>');
 
@@ -823,7 +1064,7 @@ function myOpenOrders(oDs, deci) {
             //                                 '</tr>');
         } else if (parseInt(oDs[ii].tranFrom.uid) == parseInt(localStorage.getItem('bits-user-name'))) {
             //--------------------------------- collection SELL code ---------------------------------------------------------
-            $("#myOrders").append('<ul class="collection">' + ' <li class="collection-item avatar">' + '<div class="row"> <div class="col s2"><img style="margin-top:5px;" src="/bitsAssets/images/currencies/' + oDs[ii].coin.replace('-kovan', '') + '.png" class="circle" style="height:75px;width: 75px;"></div><div class="col s8"><div style="font-size: 12px; line-height: 1.4;margin-top: 7px;"> <span class="title">BUY</span>' + '<p  class="hidden-xs">Amount: ' + Math.round10(parseFloat(oDs[ii].amount), (deci / -1)) + '</p>' + '<p  class="hidden-xs">Price:' + parseFloat(oDs[ii].rate).toFixed(5) + '</p>' + '<p>Total: ' + (parseFloat(oDs[ii].amount) * parseFloat(oDs[ii].rate)).toFixed(2) + '' + '</p></div></div><div class="col s2"><a class=" modal-trigger" href="#tradeOrder" style="padding:0 1rem" oid="' + oDs[ii].id + '" act="manage"><i class="material-icons right" style="margin-top: 30px;margin-right: 20px;">' + icon + '</i></a></div></div>' +
+            $("#myOrders").append('<ul class="collection">' + ' <li class="collection-item avatar">' + '<div class="row"> <div class="col s3"><img style="margin-top:5px;" src="/bitsAssets/images/currencies/' + oDs[ii].coin.replace('-kovan', '') + '.png" class="circle" style="height:75px;width: 75px;"></div><div class="col s7"><div style="font-size: 12px; line-height: 1.4;margin-top: 7px;"> <span class="title">BUY</span>' + '<p  class="hidden-xs">Amount: ' + Math.round10(parseFloat(oDs[ii].amount), (deci / -1)) + '</p>' + '<p  class="hidden-xs">Price:' + parseFloat(oDs[ii].rate).toFixed(5) + '</p>' + '<p>Total: ' + (parseFloat(oDs[ii].amount) * parseFloat(oDs[ii].rate)).toFixed(2) + '' + '</p></div></div><div class="col s2"><a class=" modal-trigger" href="#tradeOrder" style="padding:0 1rem" oid="' + oDs[ii].id + '" act="manage"><i class="material-icons right editOrderBtn" style="margin-top: 25px;margin-right: 20px; border: solid 1px; border-radius: 3px; padding: 5px;"">' + icon + '</i></a></div></div>' +
                 //'<a href="#!" class="secondary-content"><i class="material-icons"></i></a>'+
                 ' </li>');
 
@@ -1169,7 +1410,6 @@ function orderBookManager(baseX, baseCd) {
                         myOrdCount = 0;
                         myEscrowCount = 0;
 
-                        console.log('THIS  THIS  THIS ', oDs);
                         for (var ii in oDs) {
                             try {
 
@@ -1184,15 +1424,12 @@ function orderBookManager(baseX, baseCd) {
                                 var deci = 5;
                             }
 
-                            console.log('THIS  THIS  THIS 0', oDs[ii]);
-
-                            if (oDs[ii].tranTo == 0 && oDs[ii].state == 'pending' && oDs[ii].trading == 'false') {
+                            if (oDs[ii].tranTo == 0 && oDs[ii].state == 'pending') {
 
                                 //this is a buy order
                                 oDs[ii].type = 'buy';
 
-                                console.log('THIS  THIS  THIS 2', oDs[ii]);
-                                if (parseInt(oDs[ii].tranFrom.uid) == parseInt(localStorage.getItem('bits-user-name'))) {
+                                 if (parseInt(oDs[ii].tranFrom.uid) == parseInt(localStorage.getItem('bits-user-name'))) {
                                     myOrdCount++;
                                     try {
 
@@ -1247,7 +1484,7 @@ function orderBookManager(baseX, baseCd) {
                                             var bAc = '<a id="oid-act-' + oDs[ii].id + '"  class="waves-effect waves-light btn modal-trigger" href="#tradeOrder" oid="' + oDs[ii].id + '" act="sell" disabled>SELL</a>';
 
                                         } else {
-                                            var bAc = '<a id="oid-act-' + oDs[ii].id + '"  class="waves-effect waves-light btn modal-trigger" href="#tradeOrder" oid="' + oDs[ii].id + '" act="sell">SELL</a>';
+                                            var bAc = '<a id="oid-act-' + oDs[ii].id + '"  class="waves-effect waves-light btn modal-trigger" href="#tradeOrder" oid="' + oDs[ii].id + '" act="sell" >SELL</a>';
 
                                         }
                                     } catch (err) {
@@ -1411,6 +1648,7 @@ function starting() {
         /////////////////////////////////// start update exchange rates
 
         fetchRates().then(function (e) {
+            /*
             if (e.status == "ok") {
                 coinList = e.data.data;
                 var rate = coinList[0].coinRate;
@@ -1422,32 +1660,7 @@ function starting() {
 
 
                 $("#fetchedRate").html(finalRate.toFixed(2));
-                $('.orderbook').animate({
-                    scrollTop: 40
-                }, 1000);
-
-                $('#tradeOrder').modal({
-                    dismissible: true, // Modal can be dismissed by clicking outside of the modal
-                    opacity: .5, // Opacity of modal background
-                    inDuration: 300, // Transition in duration
-                    outDuration: 200, // Ending top style attribute
-                    ready: function (modal, trigger) {
-                        if (!getBitsOpt('oid') || !getBitsOpt('act')) {
-
-                            openOrder($(trigger).attr('oid'), $(trigger).attr('act'));
-                        }else{
-                        
-                        location.hash='';
-                        
-                        }
-                        setTimeout(function () {
-                            M.updateTextFields();
-                        }, 600);
-                    },
-                    complete: function () {
-                        stopOrderWatch()
-                    } // Callback for Modal close
-                });
+                */
                 /*
                             if (window.PaymentRequest) {
                                 payButton.setAttribute('style', 'display: inline;');
@@ -1465,13 +1678,39 @@ function starting() {
                 		
                 		*/
 
-                orderBookManager(e.data.baseEx, e.data.baseCd).then(function (e) {
+                orderBookManager(e.baseEx, e.baseCd).then(function (e) {
 
 
                     getAvailableCoins();
                     sortOrderBookColor();
 
 
+                $('#tradeOrder').modal({
+                    dismissible: true, // Modal can be dismissed by clicking outside of the modal
+                    opacity: .5, // Opacity of modal background
+                    inDuration: 300, // Transition in duration
+                    outDuration: 200, // Ending top style attribute
+                    ready: function (modal, trigger) {
+                        
+                            console.log($(trigger).attr('oid'), $(trigger).attr('act'));
+                        if (!getBitsOpt('oid') || !getBitsOpt('act')) {
+
+                            openOrder($(trigger).attr('oid'), $(trigger).attr('act'));
+                        }else{
+                        
+                        location.hash='';
+                        
+                        }
+                        setTimeout(function () {
+                            M.updateTextFields();
+                        }, 600);
+                        walletStatus();
+                    },
+                    complete: function () {
+                        stopOrderWatch()
+                    } // Callback for Modal close
+                });
+                    
                     //start push messaging
                     try {
 
@@ -1512,9 +1751,9 @@ function starting() {
 
 
 
-            } else {
-                console.log("error");
-            }
+           // } else {
+            //    console.log("error");
+           // }
         });
 
         ///////////////////////////// end update exchange rates//////////////////////////////////////////////////////////////////////
@@ -1619,15 +1858,6 @@ function getAvailableCoins() {
         $(".coinTab").html('').append('<li class="tab col s2" style="width: calc(100% / ' + tokenTab.length + ')!important;"><a href="#' + tokenTab[i] + '" style="color:#bbbaba;position: relative;padding: 0 12px 0px 35px;"><img class="imgTab" src="/bitsAssets/images/currencies/' + allTokens[tokenTab[i].toLowerCase()].name.replace('-kovan', '') + '.png" style="width: 30px; position: absolute;top: 10px;">' + allTokens[tokenTab[i].toLowerCase()].name + '</a></li>')
         $(".availableCoins").html('').append('<li style="cursor: pointer;"><a coin="' + tokenTab[i] + '"><img style="width: 60px; border-radius: 50%;" src="/bitsAssets/images/currencies/' + allTokens[tokenTab[i].toLowerCase()].name + '.png"><p style="margin: 0; color: white; text-transform: uppercase;">' + allTokens[tokenTab[i].toLowerCase()].name + '</p></a></li>')
         $(".coinContent").html('').append('<div id="' + tokenTab[i] + '" class="col s12 hero" style="font-size: 2em;text-transform: uppercase; color: white; line-height: 850%; display: block; margin-top: -45px;height: 250px;"><div class="row col s5"> <div class="col s12 m12 coinDataHolda"><div class="row"><div class="col s4"><img style="width: 90px;border-radius: 50%;margin-right: -10px;top: 30px;position: relative;" src="/bitsAssets/images/currencies/' + allTokens[tokenTab[i].toLowerCase()].name.replace('-kovan', '') + '.png"></div><div class="col s8"><p style=" margin: 0px;"><span style=" border-left: solid white 15px; margin-right: 20px;"></span>' + allTokens[tokenTab[i].toLowerCase()].name + '</p></div></div></div>' +
-            //'<div class="col s12 m4 hide-on-med-and-down">' +
-
-            //'<table class="striped coinInfo coinDataHolda" id="blocks" style="display:none;line-height: 20px;width: 250px;font-size: 14px;background-color: transparent!important;position: relative;top:80px; display: block; margin-left: auto; margin-right: auto;">' +
-            //'<tbody style="height: 350px;"><tr><th style="">Capitalization</th><th class="coindata-' + tokenTab[i] + '-mcap">0.00</th>' +
-            //'</tr><tr><th>Volume</th><th class="coindata-' + tokenTab[i] + '-vol">0.00</th></tr>' +
-
-            //'<tr><th></th><th></th></tr>' +
-            //'<tr><th>Website</th><th><a href="" target="_blank" style="text-transform:lowercase;color: #ffffff;" class="coindata-' + tokenTab[i] + '-wpage"></a></th></tr>' +
-            // '</tbody></table>'+
             '</div><div class="col s12 m6 doTransActs" style="text-align: center; position: relative;padding: 0px;"><h5 style="font-weight: bold;margin-top: 85px;:right: calc(50% - 100px)right: calc(50% - 99px);font-size: 17px;"><span>1 ' + allTokens[tokenTab[i].toLowerCase()].name + ' =  </span><span class="coindata-' + tokenTab[i].toLowerCase() + '-price">updating..</span></h5>' +
             '<table class="striped bordered buySell" id="blocks" style="line-height: 20px;width: 50%;float:left;display: block;margin-left: auto;margin-right: auto;background-color: transparent!important;font-size: 14px;">' +
             '<tbody style="height: 350px;"><tr><th style="padding: 0% 0% 5% 0%;text-transform:uppercase;">Balance</th></tr><tr><th class="tokens-' + tokenTab[i].toLowerCase() + '-Balance" style="text-align: center;">' +
@@ -1638,9 +1868,9 @@ function getAvailableCoins() {
             '</div><div class="circle-clipper right"><div class="circle"></div></div> </div></div></th></tr><tr>' +
             '<tr><th></th><th></th></tr>' +
             '</tr></tbody></table><div class="row"><table class="striped trnsf" id="blocks" style="line-height: 20px;width: 50%;float:right;font-size: 14px;background-color: transparent!important;display: block;margin-left: auto;margin-right: auto;display: block;"><tbody style="display: block;">' +
-            '<tr style=" display: block;"><th style=" display: block;"><a id="add-' + tokenTab[i] + '-buy-button" class="new-trade-buy-Button trade-new-Button waves-effect waves-light btn modal-trigger" href="#tradeOrder" style="width: calc(50% - 3px);margin-right:2.5px; position:relative; overflow:initial;" oid="new" act="buy" disabled><i class="material-icons left" style="margin: 0px;">file_download</i>BUY</a>' +
-            '<a class="trade-' + tokenTab[i] + '-Button new-trade-sell-Button trade-new-Button waves-effect waves-light btn modal-trigger" href="#tradeOrder" style="width: calc(50% - 3px);margin-left:2.5px;  position:relative;" oid="new" act="sell"><i class="material-icons right" style="margin: 0px;">file_upload</i>SELL</a></th></tr>' +
-            '<tr style=" display: block;"><td  style=" display: block;padding: 5px 0px;"><div class="popup transferTour" style=" position: absolute; z-index: 10; bottom: -410%; display:none;"> <span class="transferPopupText" id="myPopup" style=""><p style=" font-weight: 500; text-transform: initial; padding: 10px;">Transfer to a different ethereum address. Fees will be included in transfer amount.</p><div class="modal-footer"> <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat openOrderBookTour" style=" float: right;">next</a> </div></span></div><a class="transfer-' + tokenTab[i] + '-Button waves-effect waves-light btn modal-trigger red" href="#tradeOrder" style="width: 100%;" oid="new" act="transfer"><i class="material-icons right">redo</i>Transfer</a></td>' +
+            '<tr style=" display: block;"><th style=" display: block;"><a id="add-' + tokenTab[i] + '-buy-button" class="new-trade-buy-Button trade-new-Button waves-effect waves-light btn modal-trigger" href="#tradeOrder" style="width: calc(50% - 3px);margin-right:2.5px; position:relative; overflow:initial;" oid="new" act="buy" disabled onlick="walletStatus()"><i class="material-icons left" style="margin: 0px;">file_download</i>BUY</a>' +
+            '<a class="trade-' + tokenTab[i] + '-Button new-trade-sell-Button trade-new-Button waves-effect waves-light btn modal-trigger" href="#tradeOrder" style="width: calc(50% - 3px);margin-left:2.5px;  position:relative;" oid="new" act="sell" onlick="walletStatus()"><i class="material-icons right" style="margin: 0px;">file_upload</i>SELL</a></th></tr>' +
+            '<tr style=" display: block;"><td  style=" display: block;padding: 5px 0px;"><div class="popup transferTour" style=" position: absolute; z-index: 10; bottom: -410%; display:none;"> <span class="transferPopupText" id="myPopup" style=""><p style=" font-weight: 500; text-transform: initial; padding: 10px;">Transfer to a different ethereum address. Fees will be included in transfer amount.</p><div class="modal-footer"> <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat openOrderBookTour" style=" float: right;">next</a> </div></span></div><a class="transfer-' + tokenTab[i] + '-Button waves-effect waves-light btn modal-trigger red" href="#tradeOrder" style="width: 100%;" oid="new" act="transfer" onlick="walletStatus()"><i class="material-icons right">redo</i>Transfer</a></td>' +
             '</tr></tbody></table></div></div></div></div>');
 
         // $('ul.tabs').tabs('select_tab', 'tab_id');
