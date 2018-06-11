@@ -159,7 +159,7 @@
         
         @media screen and (max-width: 480px) {
             .doTransActs {
-                margin-top: 25px!important;
+                margin-top: 95px!important;
             }
             .btn,
             .btn-large,
@@ -537,7 +537,7 @@
                 margin-top: 30px;
             }
             .hero {
-                height: 250px !important;
+                height: 210px !important;
             }
             table {
                 right: 0px!important;
@@ -603,11 +603,15 @@
         }
         /************ Popular Traders ******************/
         
+        .doTradeForm>li>.collapsible-body {
+            
+         padding: 1rem!important;
+		
+        }
         .popularTraders {
             width: 70%;
             display: none;
         }
-        
         .popularTraders table {
             font-family: arial, sans-serif;
             border-collapse: collapse;
@@ -665,7 +669,7 @@
     </style>
     <!-- Lato Font -->
     <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
-    <script async defer src="https://apis.google.com/js/client:platform.js?onload=startGoogle"></script>
+    <script async src="https://apis.google.com/js/client:platform.js?onload=startGoogle"></script>
     <script src="https://bitsoko.co.ke/bitsAssets/js/storeManager.js"></script>
     <!--<script src="https://bitsoko.co.kehttps://bitsoko.co.ke/bitsAssets/js/locationManager.js"></script> -->
     <link href="https://bitsoko.co.ke/bitsAssets/html/connect.html" rel="import">
@@ -948,20 +952,19 @@
 
 
     <!-- Modal Structure -->
-    <div id="tradeOrder" class="modal" style="overflow: initial;max-height: 100%;height: 100%;">
+    <div id="tradeOrder" class="modal" style="top:calc(50% - 317px)!important;overflow: initial;max-height: 100%;width: 90%;height: 100%;">
         <div class="modal-content" style="text-align:center; padding-top:0px; padding-bottom:0px;">
             <img class="tradeOrderImg" src="" style="width: 50px;border-radius:50px;width: 90px; border-radius: 50px; background: white; margin-top: -29px; -webkit-box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75); -moz-box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75); box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75);">
-            <h5 class="tradeOrderSubTitle"></h5>
-            <div class="row">
+            <h6 class="tradeOrderSubTitle"></h6>
+            <div class="row" style="display:none;margin-top:10px;">
                 <div class="input-field col s12">
                     <span style="font-weight:bold;">STATUS: </span>
                     <span class="transStat">waiting for seller to confirm payment..</span>
                 </div>
             </div>
 
-            <form class="col s12 newTradeForm">
-
-                <div class="row">
+            <form class="col s12 newTradeForm" style="margin-top:10px;">
+                <div class="row" style="margin-bottom: 0px;">
                     <div class="input-field col s12">
                         <div class="row">
                             <div class="col s2">
@@ -990,27 +993,39 @@
             </form>
 
             <ul class="collapsible doTradeForm">
-                <li style="display:none;" class="doPayEth">
-                    <div class="collapsible-header">Pay using Ethereum</div>
-                    <div class="collapsible-body">
-                        <span>
-                            <p>Your Ethereum balance is <span id="ethBal"></span></p>
-
-                        <button class="btn" style="margin-bottom: 10px;" onclick='$("#userAccount").modal("open")' id="topUpToken">top up</button>
-                        <br>
-                        <button class="btn" id="tokenPrice">BUY</button>
-                        </span>
+                
+                <li class="doPayEth">
+                    <div class="collapsible-header">Pay using ethereum</div>
+                    <div class="collapsible-body" style="padding-top: 10px;">
+			
+                <div style="">
+                    <svg id="userWallet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 334.877 334.877" style="enable-background:new 0 0 334.877 334.877;margin: 3px;width: 27px;/* float:  left; *//* margin-top: 16px; *//* margin-left:  15px; */" xml:space="preserve" class="walletUserUnlock"><path d="M333.196,155.999h-16.067V82.09c0-17.719-14.415-32.134-32.134-32.134h-21.761L240.965,9.917 C237.571,3.798,231.112,0,224.107,0c-3.265,0-6.504,0.842-9.364,2.429l-85.464,47.526H33.815 c-17.719,0-32.134,14.415-32.134,32.134v220.653c0,17.719,14.415,32.134,32.134,32.134h251.18 c17.719,0,32.134-14.415,32.134-32.134v-64.802h16.067V155.999z M284.995,62.809c9.897,0,17.982,7.519,19.068,17.14h-24.152 l-9.525-17.14H284.995z M220.996,13.663c3.014-1.69,7.07-0.508,8.734,2.494l35.476,63.786H101.798L220.996,13.663z M304.275,302.742c0,10.63-8.651,19.281-19.281,19.281H33.815c-10.63,0-19.281-8.651-19.281-19.281V82.09 c0-10.63,8.651-19.281,19.281-19.281h72.353L75.345,79.95H37.832c-3.554,0-6.427,2.879-6.427,6.427s2.873,6.427,6.427,6.427h14.396 h234.83h17.217v63.201h-46.999c-21.826,0-39.589,17.764-39.589,39.589v2.764c0,21.826,17.764,39.589,39.589,39.589h46.999V302.742z M320.342,225.087h-3.213h-59.853c-14.743,0-26.736-11.992-26.736-26.736v-2.764c0-14.743,11.992-26.736,26.736-26.736h59.853 h3.213V225.087z M276.961,197.497c0,7.841-6.35,14.19-14.19,14.19c-7.841,0-14.19-6.35-14.19-14.19s6.35-14.19,14.19-14.19 C270.612,183.306,276.961,189.662,276.961,197.497z" style="fill: black;"></path></svg>
+                    <span id="getEthBal" style="line-height: 50px;width: 100px;color: black;">
+                        <div class="preloader-wrapper small active" style="width:  20px; height:  20px;">
+                            <div class="spinner-layer spinner-green-only">
+                              <div class="circle-clipper left">
+                                <div class="circle"></div>
+                              </div><div class="gap-patch">
+                                <div class="circle"></div>
+                              </div><div class="circle-clipper right">
+                                <div class="circle"></div>
+                              </div>
+                            </div>
+                          </div>
+                    </span>
+                </div>
                     </div>
                 </li>
-                <li style="display:none;" class="doPayMM">
+                
+                <li class="doPayMM">
                     <div class="collapsible-header">Pay using mobile money</div>
-                    <div class="collapsible-body" style="padding-top: 10px;"><span>
-                         <p class="tradeOrderBody" style="margin-top: 0; margin-bottom: 40px;"></p>
+                    <div class="collapsible-body"><span>
+                         <p class="tradeOrderBody" style="margin-top: 0; margin-bottom: 20px;"></p>
                         <form class="col s12 confTradeForm">
                             <div class="row">
                                 <div class="input-field col s12">
-                                    <input placeholder="eg: F5Y7U889E3 " id="newTradeConfirmation" type="text" class="validate">
-                                    <label for="newTradeConfirmation" class="active">Transaction Code</label>
+                                    <input placeholder="eg: F5Y7U889E3 " id="newTradeConfirmation" type="text" class="validate" style="text-align:center;">
+                                    <label for="newTradeConfirmation" class="active" style="text-align:center;">Transaction Code</label>
                                 </div>
                             </div>
                         </form>
@@ -1366,8 +1381,8 @@
     </div>
 
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://bitsoko.co.ke/bitsAssets/js/moment.js"></script>
     <script src="https://bitsoko.co.ke/bitsAssets/js/web3/web3.js"></script>
     <script src="https://bitsoko.co.ke/bitsAssets/js/hooked-web3-provider/build/hooked-web3-provider.js"></script>
@@ -1495,34 +1510,9 @@
 
             $("#notSignedIn").hide();
             starting();
-            //Unlock Wallet
-            if (sessionStorage.getItem('walletKey')) {
-                console.log('unlocked')
-            } else {
-                var toastHTML = '<span>Unlock wallet to trade</span><button id="unlckWallet" class="btn-flat toast-action" onclick="loadGdrive()">unlock</button>';
-                M.toast({
-                    html: toastHTML,
-                    displayLength: 100000,
-                    classes: "unlckWallet"
-                });
-                $(document).on('click', $('#unlckWallet'), function(e) {
-                    $(".unlckWallet").remove()
-                });
-            }
+        
         }
-        startGoogle();
-        Promise.all([indexDbReady, gDriveReady, serverConnectReady]).then(values => {
-            if (localStorage.getItem('bits-user-name') == null) {
-                console.log('signed out!');
-                getTradableCoins();
-            } else {
-
-                $("#notSignedIn").hide();
-                starting();
-            }
-        });
-
-
+      
         //        $(document).on('click', '.availableCoins a', function(event) {
         //            var selectedCoin = $(this).attr("coin");
         //            $("#tokenSelect").hide();
@@ -1573,6 +1563,35 @@
     <script>
         $(document).ready(function() {
             $('.modal').modal();
+		  startGoogle();
+		
+        Promise.all([indexDbReady, gDriveReady, serverConnectReady]).then(values => {
+		
+            if (localStorage.getItem('bits-user-name') == null) {
+                console.log('signed out!');
+                getTradableCoins();
+            } else {
+    //Unlock Wallet
+            if (sessionStorage.getItem('walletKey')) {
+                console.log('unlocked')
+            } else {
+                var toastHTML = '<span>Unlock wallet to trade</span><button id="unlckWallet" class="btn-flat toast-action" onclick="loadGdrive()">unlock</button>';
+                M.toast({
+                    html: toastHTML,
+                    displayLength: 100000,
+                    classes: "unlckWallet"
+                });
+                $(document).on('click', $('#unlckWallet'), function(e) {
+                    $(".unlckWallet").remove()
+                });
+            }
+		
+                $("#notSignedIn").hide();
+                starting();
+            }
+        });
+
+
         });
 
         function copyToClipboard() {
