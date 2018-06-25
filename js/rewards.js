@@ -157,13 +157,68 @@ function doNewTransfer() {
 
 }
 
-function orderWatch() {
-    if ($("#newTradeConfirmation").val().length > 0) {
+document.addEventListener('DOMContentLoaded',function() {
+    document.querySelector('#newTradeConfirmation').oninput=function(e){orderWatch(e.target.value)};
+	paySwits=document.querySelectorAll('.doTradeForm .switch')
+for(var i in paySwits){
+paySwits[i].onchange=function(){
+	
+	var pCls=this.getAttribute("class").replace(' switch','');
+	console.log(this,this.target,pCls);
+	switch (pCls) {
+      case 'doPayEth-switch': 
+		if(document.querySelector('.'+pCls.replace('-switch','')+' input').checked){
+			   
+            doTradeCola.open(0);
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "all";
+			   }else{
+		
+            doTradeCola.close(0);
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "none";	   
+			   }
+      break;
+         case 'doPayMM-switch': 
+            	if(document.querySelector('.'+pCls.replace('-switch','')+' input').checked){
+			   
+            doTradeCola.open(1);
+			
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "all";
+			   }else{
+		
+            doTradeCola.close(1);	   
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "none";
+			   }
+      break;
+         case 'doPaycard-switch': 
+            	if(document.querySelector('.'+pCls.replace('-switch','')+' input').checked){
+			   
+            doTradeCola.open(2);
+			
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "all";
+			   }else{
+		
+            doTradeCola.close(2);	
+				   
+			document.querySelector('.'+pCls.replace('-switch','')).style["pointer-events"] = "none";
+			   }
+      break;
+        default:
+            console.log('info! unknown payment method');
+ 
+		} 
+	
+};
+}
+},false);
+
+
+function orderWatch(cod) {
+    if (cod.length > 0) {
         doFetch({
             action: 'orderWatcher',
             oid: $('.tradeOrderFooterComplete').attr("oid"),
             user: localStorage.getItem('bits-user-name'),
-            orderRef: $("#newTradeConfirmation").val()
+            orderRef: cod
         }).then(function (e) {
             if (e.status == 'ok') {
 
@@ -182,7 +237,7 @@ function orderWatch() {
                 $(".transStat").html(e.msg);
                 M.toast({
                     displayLength: 2000,
-                    html: '<span class="toastlogin">order not confirmed!</span>'
+                    html: '<span class="toastlogin">waiting for seller to confirm</span>'
                 });
 
             }
@@ -199,6 +254,7 @@ function orderWatch() {
 
 
 }
+
 
 function refreshOrderBook() {
 
@@ -1643,9 +1699,18 @@ function discoverExchange(e) {
 
 }
 
-
+started=false;
+statInt=setInterval(function(){
+if(!started){
+starting();
+}
+	
+},450)
 function starting() {
 
+started=true;
+	//bad hack fix, sometimes the ready callbacks are not working :?{
+        clearInterval(statInt);
     //user wants to trade so hide default landing page
     if (getBitsWinOpt('uid') || getBitsWinOpt('cid')) $("#tokenSelect").hide();
     walletFunctions(localStorage.getItem('bits-user-name')).then(function (u) {
@@ -1948,7 +2013,8 @@ function getAvailableCoins() {
     });
     // $('.modal').modal();
      $('.collapsible').collapsible();
-M.Collapsible.getInstance(document.querySelector('.doTradeForm')).options.onOpenStart=function(e){
+doTradeCola=M.Collapsible.getInstance(document.querySelector('.doTradeForm'));
+doTradeCola.options.onOpenStart=function(e){
      
          document.querySelector('.tradeOrderFooterComplete').setAttribute("disabled", true);
      
@@ -2253,7 +2319,7 @@ function sendPaymentToServer(instrumentResponse) {
             });
     }, 2000);
 }
-
+/*
 //Open User Account
 $(document).on("click", "#topUpToken", function () {
     $("#tradeOrder").modal({
@@ -2265,7 +2331,7 @@ $(document).on("click", "#topUpToken", function () {
         $("#userAccount").modal("open");
     }, 2000);
 })
-
+*/
 /**
  * Converts the payment instrument into a JSON string.
  *
