@@ -30,7 +30,6 @@
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <script async="" defer="" src="https://bitsoko.co.ke/bitsAssets/js/lightwallet/lightwallet.min.js"></script>
     <script async="" defer="" src="https://bitsoko.co.ke/bitsAssets/js/ethjs-provider-signer.js"></script>
     <script async="" defer="" src="https://www.gstatic.com/firebasejs/3.6.7/firebase.js"></script>
     <script async="" src="https://bitsoko.co.ke/bitsAssets/js/raphQR.js"></script>
@@ -960,6 +959,7 @@
         <div class="modal-content" style="text-align:center; padding-top:0px; padding-bottom:0px;">
             <img class="tradeOrderImg" src="" style="width: 50px;border-radius:50px;width: 90px; border-radius: 50px; background: white; margin-top: -29px; -webkit-box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75); -moz-box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75); box-shadow: 0px 9px 23px -5px rgba(0,0,0,0.75);">
             <h6 class="tradeOrderSubTitle" style="margin: 1.5rem 0 1.5rem 0;"></h6>
+            <span id="buySteps" style="color: grey; border: solid #e4e4e4 1px; padding: 10px; border-radius: 3px;display:none;"><span id="step1" style="color: green; padding-right: 15px;cursor: -webkit-grab;">Step 1</span> > <span id="step2" style="padding-left: 15px;cursor: -webkit-grab;"> Step 2</span></span>
             <div class="row" style="display:none;margin-top:10px;">
                 <div class="input-field col s12">
                     <span style="font-weight:bold;">STATUS: </span>
@@ -967,7 +967,7 @@
                 </div>
             </div>
 
-            <form class="col s12 newTradeForm" style="margin-top:10px;">
+            <form class="col s12 newTradeForm" style="margin-top:30px;">
                 <div class="row" style="margin-bottom: 0px;">
                     <div class="input-field col s12">
                         <div class="row">
@@ -996,24 +996,46 @@
                 </div>
             </form>
 
-            <ul class="collapsible doTradeForm popout">
-                
-                <li class="doPayEth"  style="pointer-events:none;">
-                    <div class="collapsible-header">Pay using ethereum
-  <!-- Switch -->
-  <div class="doPayEth-switch switch" style="pointer-events:all;right: 50px;position: absolute;">
-    <label>
-      <input type="checkbox" class="doPayEth-switch">
-      <span class="lever"></span>
-      
-    </label>
-  </div>
-</div>
-                    <div class="collapsible-body" style="padding-top: 10px;">
-			
-                <div style="">
-                    <svg id="userWallet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 334.877 334.877" style="enable-background:new 0 0 334.877 334.877;margin: 3px;width: 27px;/* float:  left; *//* margin-top: 16px; *//* margin-left:  15px; */" xml:space="preserve" class="walletUserUnlock"><path d="M333.196,155.999h-16.067V82.09c0-17.719-14.415-32.134-32.134-32.134h-21.761L240.965,9.917 C237.571,3.798,231.112,0,224.107,0c-3.265,0-6.504,0.842-9.364,2.429l-85.464,47.526H33.815 c-17.719,0-32.134,14.415-32.134,32.134v220.653c0,17.719,14.415,32.134,32.134,32.134h251.18 c17.719,0,32.134-14.415,32.134-32.134v-64.802h16.067V155.999z M284.995,62.809c9.897,0,17.982,7.519,19.068,17.14h-24.152 l-9.525-17.14H284.995z M220.996,13.663c3.014-1.69,7.07-0.508,8.734,2.494l35.476,63.786H101.798L220.996,13.663z M304.275,302.742c0,10.63-8.651,19.281-19.281,19.281H33.815c-10.63,0-19.281-8.651-19.281-19.281V82.09 c0-10.63,8.651-19.281,19.281-19.281h72.353L75.345,79.95H37.832c-3.554,0-6.427,2.879-6.427,6.427s2.873,6.427,6.427,6.427h14.396 h234.83h17.217v63.201h-46.999c-21.826,0-39.589,17.764-39.589,39.589v2.764c0,21.826,17.764,39.589,39.589,39.589h46.999V302.742z M320.342,225.087h-3.213h-59.853c-14.743,0-26.736-11.992-26.736-26.736v-2.764c0-14.743,11.992-26.736,26.736-26.736h59.853 h3.213V225.087z M276.961,197.497c0,7.841-6.35,14.19-14.19,14.19c-7.841,0-14.19-6.35-14.19-14.19s6.35-14.19,14.19-14.19 C270.612,183.306,276.961,189.662,276.961,197.497z" style="fill: black;"></path></svg>
-                    <span id="getEthBal" style="line-height: 50px;width: 100px;color: black;">
+            <button class="btn" id="slctPmntMthd" style="margin-left: auto; margin-right: auto; margin-bottom: 30px;">select payment method</button>
+            
+            <div class="row stepsHide">
+                <p style="text-align: center;">Select payment method below</p>
+                <div class="col s12">
+                    <ul class="tabs doTradeForm popout">
+                        <li class="tab col s3" style="width: 33%">
+                            <a href="#test1">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 507.312 507.312" style="enable-background:new 0 0 507.312 507.312;width:20px;" xml:space="preserve">
+                                    <rect x="237.656" y="160.64" width="32" height="32"/>
+                                    <rect x="237.656" y="224.64" width="32" height="32"/>
+                                    <path d="M253.656,0L90.6,289.888l163.056,217.424l163.056-217.424L253.656,0z M237.656,432.64l-78.304-104.4l78.304,34.8V432.64z      M237.656,288.64v39.376l-105.44-46.848l105.44-187.456v34.928h32V93.712l105.44,187.456l-105.44,46.848V288.64H237.656z      M269.656,432.64v-69.6l78.304-34.8L269.656,432.64z"/>
+                                </svg>
+                            </a>
+                        </li>
+                        <li class="tab col s3" style="width: 33%">
+                            <a class="active" href="#test2">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;width: 20px;" xml:space="preserve">
+                                    <path d="M196.233,71.841h-39.844c-11.003,0-19.922,8.919-19.922,19.922s8.919,19.922,19.922,19.922h39.844     c11.003,0,19.922-8.919,19.922-19.922S207.237,71.841,196.233,71.841z"></path>
+                                    <circle cx="176.311" cy="420.479" r="19.922"></circle>
+                                    <path d="M352.623,90.924V80.685c0-43.94-35.748-79.689-79.689-79.689H79.689C35.748,0.996,0,36.744,0,80.685v350.63     c0,43.94,35.748,79.689,79.689,79.689h193.245c43.94,0,79.689-35.748,79.689-79.689v-8.013     c24.767-1.044,49.161-7.61,70.952-19.182c9.718-5.161,13.413-17.222,8.252-26.939s-17.222-13.412-26.939-8.252     c-18.101,9.612-38.586,14.694-59.238,14.694c-69.755,0-126.506-56.75-126.506-126.506s56.75-126.506,126.506-126.506     s126.506,56.75,126.506,126.506c0,17.842-3.633,35.08-10.8,51.233c-4.461,10.058,0.075,21.829,10.132,26.29     c10.06,4.459,21.829-0.075,26.29-10.132C507.215,303.235,512,280.561,512,257.118C512,167.729,441.126,94.592,352.623,90.924z      M312.778,94.036C236.743,109.337,179.3,176.642,179.3,257.118S236.743,404.898,312.778,420.2v11.116     c0,21.97-17.874,39.844-39.844,39.844H79.689c-21.97,0-39.844-17.874-39.844-39.844V80.685c0-21.97,17.874-39.844,39.844-39.844     h193.245c21.97,0,39.844,17.874,39.844,39.844V94.036z"></path>
+                                    <path d="M345.65,356.729c11.003,0,19.922-8.919,19.922-19.922v-3.399c20.013-5.042,34.864-23.086,34.864-44.513v-7.986     c0-25.265-20.735-45.821-46.221-45.821H340.96c-3.355,0-6.297-3.204-6.297-6.857v-0.841c0-3.496,2.707-6.132,6.297-6.132h24.612     c11.003,0,19.922-8.919,19.922-19.922c0-11.003-8.919-19.922-19.922-19.922v-2.988c0-11.003-8.919-19.922-19.922-19.922     c-11.003,0-19.922,8.919-19.922,19.922v5.574c-17.979,6.285-30.909,23.357-30.909,43.391v0.841     c0,25.751,20.699,46.702,46.142,46.702h13.254c3.636,0,6.377,2.57,6.377,5.977v7.986c0,3.464-2.741,6.076-6.377,6.076h-40.44     c-11.003,0-19.922,8.919-19.922,19.922s8.919,19.922,19.922,19.922h11.953v1.992C325.728,347.809,334.647,356.729,345.65,356.729     z"></path>
+                                </svg>
+                            </a>
+                        </li>
+                        <li class="tab col s3 disabled" style="width: 33%">
+                            <a href="#test3">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 459.669 459.669" style="enable-background:new 0 0 459.669 459.669; width: 20px;" xml:space="preserve">
+                                    <path style="fill: grey;" d="M404.723,76.087H54.948C24.649,76.087,0,100.735,0,131.035v197.599c0,30.298,24.649,54.948,54.948,54.948h349.774    c30.298,0,54.947-24.65,54.947-54.948V131.035C459.67,100.735,435.021,76.087,404.723,76.087z M429.267,328.633    c0,13.534-11.011,24.544-24.544,24.544H54.948c-13.534,0-24.545-11.01-24.545-24.544V196.214h398.863L429.267,328.633    L429.267,328.633z M429.267,152.839l-398.863,0.029v-21.834c0-13.534,11.011-24.545,24.545-24.545h349.774    c13.533,0,24.544,11.011,24.544,24.545V152.839z"/>
+                                    <path style="fill: grey;" d="M68.136,324.98h83.23c2.98,0,5.398-2.416,5.398-5.396v-16.421c0-2.981-2.418-5.397-5.398-5.397h-83.23    c-2.981,0-5.398,2.416-5.398,5.397v16.421C62.737,322.564,65.154,324.98,68.136,324.98z"/>
+                                    <path style="fill: grey;" d="M337.963,324.98h24.756c14.288,0,25.87-11.582,25.87-25.869v-24.756c0-14.287-11.582-25.869-25.87-25.869h-24.756    c-14.287,0-25.869,11.582-25.869,25.869v24.756C312.094,313.398,323.676,324.98,337.963,324.98z"/>
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="test1" class="col s12 doPayEth">
+                    <div style="">
+                        <svg id="userWallet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 334.877 334.877" style="enable-background:new 0 0 334.877 334.877;margin: 3px;width: 27px;/* float:  left; *//* margin-top: 16px; *//* margin-left:  15px; */" xml:space="preserve" class="walletUserUnlock"><path d="M333.196,155.999h-16.067V82.09c0-17.719-14.415-32.134-32.134-32.134h-21.761L240.965,9.917 C237.571,3.798,231.112,0,224.107,0c-3.265,0-6.504,0.842-9.364,2.429l-85.464,47.526H33.815 c-17.719,0-32.134,14.415-32.134,32.134v220.653c0,17.719,14.415,32.134,32.134,32.134h251.18 c17.719,0,32.134-14.415,32.134-32.134v-64.802h16.067V155.999z M284.995,62.809c9.897,0,17.982,7.519,19.068,17.14h-24.152 l-9.525-17.14H284.995z M220.996,13.663c3.014-1.69,7.07-0.508,8.734,2.494l35.476,63.786H101.798L220.996,13.663z M304.275,302.742c0,10.63-8.651,19.281-19.281,19.281H33.815c-10.63,0-19.281-8.651-19.281-19.281V82.09 c0-10.63,8.651-19.281,19.281-19.281h72.353L75.345,79.95H37.832c-3.554,0-6.427,2.879-6.427,6.427s2.873,6.427,6.427,6.427h14.396 h234.83h17.217v63.201h-46.999c-21.826,0-39.589,17.764-39.589,39.589v2.764c0,21.826,17.764,39.589,39.589,39.589h46.999V302.742z M320.342,225.087h-3.213h-59.853c-14.743,0-26.736-11.992-26.736-26.736v-2.764c0-14.743,11.992-26.736,26.736-26.736h59.853 h3.213V225.087z M276.961,197.497c0,7.841-6.35,14.19-14.19,14.19c-7.841,0-14.19-6.35-14.19-14.19s6.35-14.19,14.19-14.19 C270.612,183.306,276.961,189.662,276.961,197.497z" style="fill: black;"></path></svg>
+                        <span id="getEthBal" style="line-height: 50px;width: 100px;color: black;">
                         <div class="preloader-wrapper small active" style="width:  20px; height:  20px;">
                             <div class="spinner-layer spinner-green-only">
                               <div class="circle-clipper left">
@@ -1026,21 +1048,10 @@
                             </div>
                           </div>
                     </span>
-                </div>
                     </div>
-                </li>
-                
-                <li class="doPayMM" style="pointer-events:none;">
-                    <div class="collapsible-header">Pay using mobile money
-			<!-- Switch -->
-  <div class="doPayMM-switch switch" style="pointer-events:all; right: 50px;position: absolute;">
-    <label>
-      <input type="checkbox" class="doPayMM-switch">
-      <span class="lever"></span>
-    </label>
-  </div>
-			</div>
-                    <div class="collapsible-body"><span>
+                </div>
+                <div id="test2" class="col s12 doPayMM">
+                    <span>
                          <p class="tradeOrderBody" style="margin-top: 0; margin-bottom: 20px;"></p>
                         <form class="col s12 confTradeForm">
                             <div class="row">
@@ -1051,29 +1062,19 @@
                             </div>
                         </form>
                     </span>
-                    </div>
-                </li>
-                <li style="pointer-events:none;" class="doPaycard">
-                    <div class="collapsible-header">Pay using credit card
-			<!-- Switch -->
-  <div class="doPaycard-switch switch" style="pointer-events:none; right: 50px;position: absolute;">
-    <label>
-      <input type="checkbox" class="doPaycard-switch">
-      <span class="lever"></span>
-    </label>
-  </div>
-			</div>
-                    <div class="collapsible-body" style="padding-top: 0px; padding-bottom: 10px;">
-                        <span> 
-                            <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+                </div>
+                <div id="test3" class="col s12">
+                    <span>     
+                        <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                         <br>
-                        <span style="">pay with credit card. Inclusive of 5% card fees.</span><br><br>
-                        <div class="btn" id="buyTokenButton" style="padding: 10px !important;">PAY <span class="totalCardPay"></span>/=</div>
-                    </div>
+                        <span style="">pay with credit card. Inclusive of 5% card fees.</span>
+                            <br>
+                            <br>
+                            <div class="btn" id="buyTokenButton" style="padding: 10px !important;">PAY <span class="totalCardPay"></span>/=</div>
+                        </div>
                     </span>
-        </div>
-        </li>
-        </ul>
+                </div>
+            </div>
         <!--
         <form class="col s12 confTradeForm">
             <div class="row">
@@ -1405,7 +1406,7 @@
                 </svg>
             </div>
             <h5 style="text-align: center; padding: 5%; margin:0px;">Select a wallet</h5>
-            <div id="walletList" style="max-height: 255px; overflow: scroll; text-align: center;"></div>
+            <ul id="walletList" style="max-height: 255px; overflow: scroll; text-align: center;" class="collection"></ul>
         </div>
     </div>
 
@@ -1530,6 +1531,15 @@
         }
 
     </script>
+    <script src="js/manage-order.js"></script>
+    <script src="js/payment-channel.js"></script>
+    <script src="js/discover-tour.js"></script>
+    <script src="js/credit-card.js"></script>
+    <script src="js/open-orders.js"></script>
+    <script src="js/new-order.js"></script>
+    <script src="js/trade-history.js"></script>
+    <script src="js/token-transfer.js"></script>
+    <script src="js/orderbook.js"></script>
     <script src="js/rewards.js"></script>
     <script src="https://bitsoko.co.ke/bitsAssets/js/pushManager/google-fcm.js"></script>
 
